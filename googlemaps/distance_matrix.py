@@ -19,7 +19,8 @@
 
 from googlemaps import convert
 from googlemaps.convert import as_list
-
+import asyncio
+@asyncio.coroutine
 def distance_matrix(client, origins, destinations,
                     mode=None, language=None, avoid=None, units=None,
                     departure_time=None, arrival_time=None, transit_mode=None,
@@ -115,7 +116,8 @@ def distance_matrix(client, origins, destinations,
     if transit_routing_preference:
         params["transit_routing_preference"] = transit_routing_preference
 
-    return client._get("/maps/api/distancematrix/json", params)
+    results = yield from client._get("/maps/api/distancematrix/json", params)
+    return results
 
 
 def _convert_path(waypoints):

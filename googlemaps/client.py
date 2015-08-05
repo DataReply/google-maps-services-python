@@ -30,6 +30,7 @@ import random
 import time
 
 import googlemaps
+import asyncio
 
 try: # Python 3
     from urllib.parse import urlencode
@@ -110,7 +111,7 @@ class Client(object):
         self.client_secret = client_secret
         self.retry_timeout = timedelta(seconds=retry_timeout)
 
-
+    @asyncio.coroutine
     def _get(self, url, params, first_request_time=None, retry_counter=0,
              base_url=_DEFAULT_BASE_URL, accepts_clientid=True, extract_body=None):
         """Performs HTTP GET request with credentials, returning the body as
@@ -178,12 +179,13 @@ class Client(object):
         try:
             if extract_body:
                 return extract_body(resp)
-            return self._get_body(resp)
+            results= yield from self._get_body(resp)
+            return results
         except googlemaps.exceptions._RetriableRequest:
             # Retry request.
             return self._get(url, params, first_request_time, retry_counter + 1,
                              base_url, accepts_clientid, extract_body)
-
+    @asyncio.coroutine
     def _get_body(self, resp):
         if resp.status_code != 200:
             raise googlemaps.exceptions.HTTPError(resp.status_code)
