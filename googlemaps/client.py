@@ -165,7 +165,7 @@ class Client(object):
         try:
             resp = yield from aiohttp.request('GET', base_url + authed_url,
                 headers={"User-Agent": _USER_AGENT}) # NOTE(cbro): verify SSL certs.
-        except requests.exceptions.Timeout:
+        except aiohttp.errors.ClientTimeoutError:
             raise googlemaps.exceptions.Timeout()
         except Exception as e:
             raise googlemaps.exceptions.TransportError(e)
