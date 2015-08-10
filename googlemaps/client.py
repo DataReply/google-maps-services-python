@@ -31,6 +31,7 @@ import time
 
 import googlemaps
 import asyncio
+import aiohttp
 
 try: # Python 3
     from urllib.parse import urlencode
@@ -162,16 +163,14 @@ class Client(object):
         authed_url = self._generate_auth_url(url, params, accepts_clientid)
 
         try:
-            resp = requests.get(base_url + authed_url,
-                headers={"User-Agent": _USER_AGENT},
-                timeout=self.timeout,
-                verify=True) # NOTE(cbro): verify SSL certs.
+            resp = yield from aiohttp.request('GET', base_url + authed_url,
+                headers={"User-Agent": _USER_AGENT}) # NOTE(cbro): verify SSL certs.
         except requests.exceptions.Timeout:
             raise googlemaps.exceptions.Timeout()
         except Exception as e:
             raise googlemaps.exceptions.TransportError(e)
 
-        if resp.status_code in _RETRIABLE_STATUSES:
+        if resp.status in _RETRIABLE_STATUSES:
             # Retry request.
             return self._get(url, params, first_request_time, retry_counter + 1,
                              base_url, accepts_clientid, extract_body)
@@ -187,10 +186,10 @@ class Client(object):
                              base_url, accepts_clientid, extract_body)
     @asyncio.coroutine
     def _get_body(self, resp):
-        if resp.status_code != 200:
-            raise googlemaps.exceptions.HTTPError(resp.status_code)
+        if resp.status != 200:
+            raise googlemaps.exceptions.HTTPError(resp.status)
 
-        body = resp.json()
+        body = yield from resp.json()
 
         api_status = body["status"]
         if api_status == "OK" or api_status == "ZERO_RESULTS":
