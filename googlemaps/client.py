@@ -1,4 +1,4 @@
-#
+﻿#
 # Copyright 2014 Google Inc. All rights reserved.
 #
 #
@@ -182,8 +182,10 @@ class Client(object):
             return results
         except googlemaps.exceptions._RetriableRequest:
             # Retry request.
-            return self._get(url, params, first_request_time, retry_counter + 1,
+            retried=yield from self._get(url, params, first_request_time, retry_counter + 1,
                              base_url, accepts_clientid, extract_body)
+            return retried
+
     @asyncio.coroutine
     def _get_body(self, resp):
         if resp.status != 200:
