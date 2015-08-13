@@ -1,4 +1,4 @@
-﻿#
+#
 # Copyright 2014 Google Inc. All rights reserved.
 #
 #
@@ -172,19 +172,19 @@ class Client(object):
 
         if resp.status in _RETRIABLE_STATUSES:
             # Retry request.
-            return self._get(url, params, first_request_time, retry_counter + 1,
-                             base_url, accepts_clientid, extract_body)
+            return (yield from self._get(url, params, first_request_time, retry_counter + 1,
+                             base_url, accepts_clientid, extract_body))
 
         try:
             if extract_body:
                 return extract_body(resp)
-            results= yield from self._get_body(resp)
-            return results
+            return (yield from self._get_body(resp))
+
         except googlemaps.exceptions._RetriableRequest:
             # Retry request.
-            retried=yield from self._get(url, params, first_request_time, retry_counter + 1,
-                             base_url, accepts_clientid, extract_body)
-            return retried
+            return (yield from self._get(url, params, first_request_time, retry_counter + 1,
+                             base_url, accepts_clientid, extract_body))
+
 
     @asyncio.coroutine
     def _get_body(self, resp):

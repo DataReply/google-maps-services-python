@@ -17,7 +17,8 @@
 
 """Performs requests to the Google Maps Elevation API."""
 from googlemaps import convert
-
+import asyncio
+@asyncio.coroutine
 def elevation(client, locations):
     """
     Provides elevation data for locations provided on the surface of the
@@ -38,8 +39,9 @@ def elevation(client, locations):
     params["locations"] = convert.join_list("|",
             [convert.latlng(k) for k in convert.as_list(locations)])
 
-    return client._get("/maps/api/elevation/json", params)["results"]
+    return (yield from client._get("/maps/api/elevation/json", params)["results"])
 
+@asyncio.coroutine
 def elevation_along_path(client, path, samples):
     """
     Provides elevation data sampled along a path on the surface of the earth.
@@ -67,4 +69,4 @@ def elevation_along_path(client, path, samples):
         "samples": samples
     }
 
-    return client._get("/maps/api/elevation/json", params)["results"]
+    return (yield from client._get("/maps/api/elevation/json", params)["results"])

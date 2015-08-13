@@ -20,8 +20,9 @@
 from googlemaps import convert
 
 from datetime import datetime
+import asyncio
 
-
+@asyncio.coroutine
 def timezone(client, location, timestamp=None, language=None):
     """Get time zone for a location on the earth, as well as that location's
     time offset from UTC.
@@ -55,4 +56,4 @@ def timezone(client, location, timestamp=None, language=None):
     if language:
         params["language"] = language
 
-    return client._get( "/maps/api/timezone/json", params)
+    return (yield from client._get( "/maps/api/timezone/json", params))

@@ -116,8 +116,8 @@ def distance_matrix(client, origins, destinations,
     if transit_routing_preference:
         params["transit_routing_preference"] = transit_routing_preference
 
-    results = yield from client._get("/maps/api/distancematrix/json", params)
-    return results
+    return (yield from client._get("/maps/api/distancematrix/json", params))
+
 
 
 def _convert_path(waypoints):

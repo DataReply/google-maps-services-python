@@ -18,8 +18,9 @@
 """Performs requests to the Google Maps Directions API."""
 
 from googlemaps import convert
+import asyncio
 
-
+@asyncio.coroutine
 def directions(client, origin, destination,
                mode=None, waypoints=None, alternatives=False, avoid=None,
                language=None, units=None, region=None, departure_time=None,
@@ -138,7 +139,7 @@ def directions(client, origin, destination,
     if transit_routing_preference:
         params["transit_routing_preference"] = transit_routing_preference
 
-    return client._get("/maps/api/directions/json", params)["routes"]
+    return (yield from client._get("/maps/api/directions/json", params)["routes"])
 
 def _convert_waypoint(waypoint):
     if not convert.is_string(waypoint):

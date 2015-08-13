@@ -17,8 +17,9 @@
 
 """Performs requests to the Google Maps Geocoding API."""
 from googlemaps import convert
+import asyncio
 
-
+@asyncio.coroutine
 def geocode(client, address=None, components=None, bounds=None, region=None,
             language=None):
     """
@@ -67,9 +68,9 @@ def geocode(client, address=None, components=None, bounds=None, region=None,
     if language:
         params["language"] = language
 
-    return client._get("/maps/api/geocode/json", params)["results"]
+    return (yield from client._get("/maps/api/geocode/json", params)["results"])
 
-
+@asyncio.coroutine
 def reverse_geocode(client, latlng, result_type=None, location_type=None,
                     language=None):
     """
@@ -106,4 +107,4 @@ def reverse_geocode(client, latlng, result_type=None, location_type=None,
     if language:
         params["language"] = language
 
-    return client._get("/maps/api/geocode/json", params)["results"]
+    return (yield from client._get("/maps/api/geocode/json", params)["results"])
