@@ -24,6 +24,7 @@ import time
 
 import googlemaps
 import test as _test
+import pytest
 
 class DirectionsTest(_test.TestCase):
 
@@ -32,6 +33,7 @@ class DirectionsTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_simple_directions(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -40,7 +42,7 @@ class DirectionsTest(_test.TestCase):
                       content_type='application/json')
 
         # Simplest directions request. Driving directions by default.
-        routes = self.client.directions("Sydney", "Melbourne")
+        routes = yield from self.client.directions("Sydney", "Melbourne")
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/directions/json'
@@ -49,6 +51,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_complex_request(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -56,7 +59,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Sydney", "Melbourne",
+        routes = yield from self.client.directions("Sydney", "Melbourne",
                                        mode="bicycling",
                                        avoid=["highways", "tolls", "ferries"],
                                        units="metric",
@@ -75,10 +78,11 @@ class DirectionsTest(_test.TestCase):
         # With mode of transit, we need a departure_time or an
         # arrival_time specified
         with self.assertRaises(googlemaps.exceptions.ApiError):
-            self.client.directions("Sydney Town Hall", "Parramatta, NSW",
+            yield from self.client.directions("Sydney Town Hall", "Parramatta, NSW",
                                   mode="transit")
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_transit_with_departure_time(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -87,7 +91,7 @@ class DirectionsTest(_test.TestCase):
                       content_type='application/json')
 
         now = datetime.now()
-        routes = self.client.directions("Sydney Town Hall", "Parramatta, NSW",
+        routes = yield from self.client.directions("Sydney Town Hall", "Parramatta, NSW",
                                        mode="transit",
                                        departure_time=now)
 
@@ -99,6 +103,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_transit_with_arrival_time(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -107,7 +112,7 @@ class DirectionsTest(_test.TestCase):
                       content_type='application/json')
 
         an_hour_from_now = datetime.now() + timedelta(hours=1)
-        routes = self.client.directions("Sydney Town Hall",
+        routes = yield from self.client.directions("Sydney Town Hall",
                                        "Parramatta, NSW",
                                        mode="transit",
                                        arrival_time=an_hour_from_now)
@@ -119,14 +124,14 @@ class DirectionsTest(_test.TestCase):
                             (time.mktime(an_hour_from_now.timetuple()), self.key),
                             responses.calls[0].request.url)
 
-
     def test_crazy_travel_mode(self):
         with self.assertRaises(ValueError):
-            self.client.directions("48 Pirrama Road, Pyrmont, NSW",
+            yield from self.client.directions("48 Pirrama Road, Pyrmont, NSW",
                                   "Sydney Town Hall",
                                   mode="crawling")
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_travel_mode_round_trip(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -134,7 +139,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Town Hall, Sydney",
+        routes = yield from self.client.directions("Town Hall, Sydney",
                                        "Parramatta, NSW",
                                        mode="bicycling")
 
@@ -145,6 +150,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_brooklyn_to_queens_by_transit(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -153,7 +159,7 @@ class DirectionsTest(_test.TestCase):
                       content_type='application/json')
 
         now = datetime.now()
-        routes = self.client.directions("Brooklyn",
+        routes = yield from self.client.directions("Brooklyn",
                                        "Queens",
                                        mode="transit",
                                        departure_time=now)
@@ -165,6 +171,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_boston_to_concord_via_charlestown_and_lexington(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -172,7 +179,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Boston, MA",
+        routes = yield from self.client.directions("Boston, MA",
                                        "Concord, MA",
                                        waypoints=["Charlestown, MA",
                                                   "Lexington, MA"])
@@ -185,6 +192,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_adelaide_wine_tour(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -192,7 +200,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Adelaide, SA",
+        routes = yield from self.client.directions("Adelaide, SA",
                                        "Adelaide, SA",
                                        waypoints=["Barossa Valley, SA",
                                                   "Clare, SA",
@@ -209,6 +217,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_toledo_to_madrid_in_spain(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -216,7 +225,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Toledo", "Madrid",
+        routes = yield from self.client.directions("Toledo", "Madrid",
                                        region="es")
 
         self.assertEqual(1, len(responses.calls))
@@ -226,6 +235,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_zero_results_returns_response(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -233,11 +243,12 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Toledo", "Madrid")
+        routes = yield from self.client.directions("Toledo", "Madrid")
         self.assertIsNotNone(routes)
         self.assertEqual(0, len(routes))
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_language_parameter(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -245,7 +256,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Toledo", "Madrid",
+        routes = yield from self.client.directions("Toledo", "Madrid",
                                        region="es",
                                        language="es")
 
@@ -256,6 +267,7 @@ class DirectionsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_alternatives(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/directions/json',
@@ -263,7 +275,7 @@ class DirectionsTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        routes = self.client.directions("Sydney Town Hall",
+        routes = yield from self.client.directions("Sydney Town Hall",
                                        "Parramatta Town Hall",
                                        alternatives=True)
 

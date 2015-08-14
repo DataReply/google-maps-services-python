@@ -23,6 +23,7 @@ import responses
 
 import test as _test
 import googlemaps
+import pytest
 
 class GeocodingTest(_test.TestCase):
 
@@ -31,6 +32,7 @@ class GeocodingTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_simple_geocode(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -38,7 +40,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('Sydney')
+        results = yield from self.client.geocode('Sydney')
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -46,6 +48,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_reverse_geocode(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -53,7 +56,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.reverse_geocode((-33.8674869, 151.2069902))
+        results = yield from self.client.reverse_geocode((-33.8674869, 151.2069902))
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -61,6 +64,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocoding_the_googleplex(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -68,7 +72,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('1600 Amphitheatre Parkway, '
+        results = yield from self.client.geocode('1600 Amphitheatre Parkway, '
                                   'Mountain View, CA')
 
         self.assertEqual(1, len(responses.calls))
@@ -78,6 +82,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocode_with_bounds(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -85,7 +90,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('Winnetka',
+        results = yield from self.client.geocode('Winnetka',
                                   bounds={'southwest': (34.172684, -118.604794),
                                           'northeast':(34.236144, -118.500938)})
 
@@ -96,6 +101,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocode_with_region_biasing(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -103,7 +109,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('Toledo', region='es')
+        results = yield from self.client.geocode('Toledo', region='es')
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -111,6 +117,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocode_with_component_filter(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -118,7 +125,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('santa cruz',
+        results = yield from self.client.geocode('santa cruz',
             components={'country': 'ES'})
 
         self.assertEqual(1, len(responses.calls))
@@ -128,6 +135,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocode_with_multiple_component_filters(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -135,7 +143,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('Torun',
+        results = yield from self.client.geocode('Torun',
             components={'administrative_area': 'TX','country': 'US'})
 
         self.assertEqual(1, len(responses.calls))
@@ -146,6 +154,7 @@ class GeocodingTest(_test.TestCase):
 
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_geocode_with_just_components(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -153,7 +162,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode(
+        results = yield from self.client.geocode(
             components={'route': 'Annegatan',
                         'administrative_area': 'Helsinki',
                         'country': 'Finland'})
@@ -165,6 +174,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_simple_reverse_geocode(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -172,7 +182,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.reverse_geocode((40.714224, -73.961452))
+        results = yield from self.client.reverse_geocode((40.714224, -73.961452))
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -180,6 +190,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_reverse_geocode_restricted_by_type(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -187,7 +198,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.reverse_geocode((40.714224, -73.961452),
+        results = yield from self.client.reverse_geocode((40.714224, -73.961452),
                                           location_type='ROOFTOP',
                                           result_type='street_address')
 
@@ -198,6 +209,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_reverse_geocode_multiple_location_types(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -205,7 +217,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.reverse_geocode((40.714224, -73.961452),
+        results = yield from self.client.reverse_geocode((40.714224, -73.961452),
                                           location_type=['ROOFTOP',
                                                          'RANGE_INTERPOLATED'],
                                           result_type='street_address')
@@ -218,6 +230,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_reverse_geocode_multiple_result_types(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -225,7 +238,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.reverse_geocode((40.714224, -73.961452),
+        results = yield from self.client.reverse_geocode((40.714224, -73.961452),
                                           location_type='ROOFTOP',
                                           result_type=['street_address',
                                                        'route'])
@@ -237,6 +250,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_partial_match(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -244,7 +258,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode('Pirrama Pyrmont')
+        results = yield from self.client.geocode('Pirrama Pyrmont')
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -252,6 +266,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_utf_results(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -259,7 +274,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.geocode(components={'postal_code': '96766'})
+        results = yield from self.client.geocode(components={'postal_code': '96766'})
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/geocode/json?'
@@ -267,6 +282,7 @@ class GeocodingTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_utf8_request(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/geocode/json',
@@ -274,7 +290,7 @@ class GeocodingTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        self.client.geocode(self.u('\\u4e2d\\u56fd')) # China
+        yield from self.client.geocode(self.u('\\u4e2d\\u56fd')) # China
         self.assertURLEqual(
                       'https://maps.googleapis.com/maps/api/geocode/json?'
                       'key=%s&address=%s' % (self.key, '%E4%B8%AD%E5%9B%BD'),

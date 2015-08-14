@@ -22,6 +22,7 @@ import responses
 
 import googlemaps
 import test as _test
+import pytest
 
 class ElevationTest(_test.TestCase):
 
@@ -30,6 +31,7 @@ class ElevationTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_elevation_single(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/elevation/json',
@@ -37,7 +39,7 @@ class ElevationTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.elevation((40.714728, -73.998672))
+        results = yield from self.client.elevation((40.714728, -73.998672))
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/elevation/json?'
@@ -45,6 +47,7 @@ class ElevationTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_elevation_single_list(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/elevation/json',
@@ -52,7 +55,7 @@ class ElevationTest(_test.TestCase):
                       status=200,
                       content_type='application/json')
 
-        results = self.client.elevation([(40.714728, -73.998672)])
+        results = yield from self.client.elevation([(40.714728, -73.998672)])
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/elevation/json?'
@@ -60,6 +63,7 @@ class ElevationTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_elevation_multiple(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/elevation/json',
@@ -68,7 +72,7 @@ class ElevationTest(_test.TestCase):
                       content_type='application/json')
 
         locations = [(40.714728, -73.998672), (-34.397, 150.644)]
-        results = self.client.elevation(locations)
+        results = yield from self.client.elevation(locations)
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/elevation/json?'
@@ -78,10 +82,11 @@ class ElevationTest(_test.TestCase):
 
     def test_elevation_along_path_single(self):
         with self.assertRaises(googlemaps.exceptions.ApiError):
-            results = self.client.elevation_along_path(
+            results = yield from self.client.elevation_along_path(
                     [(40.714728, -73.998672)], 5)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_elevation_along_path(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/elevation/json',
@@ -91,7 +96,7 @@ class ElevationTest(_test.TestCase):
 
         path = [(40.714728, -73.998672), (-34.397, 150.644)]
 
-        results = self.client.elevation_along_path(path, 5)
+        results = yield from self.client.elevation_along_path(path, 5)
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/elevation/json?'

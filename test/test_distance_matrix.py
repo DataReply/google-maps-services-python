@@ -20,7 +20,7 @@
 import googlemaps
 import responses
 import test as _test
-
+import pytest
 class DistanceMatrixTest(_test.TestCase):
 
     def setUp(self):
@@ -28,6 +28,7 @@ class DistanceMatrixTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_basic_params(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/distancematrix/json',
@@ -45,7 +46,7 @@ class DistanceMatrixTest(_test.TestCase):
                         "Bungle Bungles, Australia",
                         "The Pinnacles, Australia"]
 
-        matrix = self.client.distance_matrix(origins, destinations)
+        matrix = yield from self.client.distance_matrix(origins, destinations)
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/distancematrix/json?'
@@ -59,6 +60,7 @@ class DistanceMatrixTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_mixed_params(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/distancematrix/json',
@@ -70,7 +72,7 @@ class DistanceMatrixTest(_test.TestCase):
         destinations = [(43.012486, -83.6964149),
                         {"lat": 42.8863855, "lng": -78.8781627}]
 
-        matrix = self.client.distance_matrix(origins, destinations)
+        matrix = yield from self.client.distance_matrix(origins, destinations)
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual('https://maps.googleapis.com/maps/api/distancematrix/json?'
@@ -80,6 +82,7 @@ class DistanceMatrixTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_all_params(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/distancematrix/json',
@@ -97,7 +100,7 @@ class DistanceMatrixTest(_test.TestCase):
                         "Bungle Bungles, Australia",
                         "The Pinnacles, Australia"]
 
-        matrix = self.client.distance_matrix(origins, destinations,
+        matrix = yield from self.client.distance_matrix(origins, destinations,
                                             mode="driving",
                                             language="en-AU",
                                             avoid="tolls",
@@ -117,6 +120,7 @@ class DistanceMatrixTest(_test.TestCase):
 
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_lang_param(self):
         responses.add(responses.GET,
                       'https://maps.googleapis.com/maps/api/distancematrix/json',
@@ -127,7 +131,7 @@ class DistanceMatrixTest(_test.TestCase):
         origins = ["Vancouver BC", "Seattle"]
         destinations = ["San Francisco", "Victoria BC"]
 
-        matrix = self.client.distance_matrix(origins, destinations,
+        matrix = yield from self.client.distance_matrix(origins, destinations,
                                             language="fr-FR",
                                             mode="bicycling")
 

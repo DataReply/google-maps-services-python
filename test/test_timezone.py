@@ -24,6 +24,7 @@ import datetime
 
 import googlemaps
 import test as _test
+import pytest
 
 
 class TimezoneTest(_test.TestCase):
@@ -33,6 +34,7 @@ class TimezoneTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_los_angeles(self):
         responses.add(responses.GET,
                       "https://maps.googleapis.com/maps/api/timezone/json",
@@ -41,7 +43,7 @@ class TimezoneTest(_test.TestCase):
                       content_type="application/json")
 
         ts = 1331766000
-        timezone = self.client.timezone((39.603481, -119.682251), ts)
+        timezone = yield from self.client.timezone((39.603481, -119.682251), ts)
         self.assertIsNotNone(timezone)
 
         self.assertEqual(1, len(responses.calls))
@@ -57,6 +59,7 @@ class TimezoneTest(_test.TestCase):
             return datetime.datetime.fromtimestamp(1608)
 
     @responses.activate
+    @pytest.mark.asyncio
     @mock.patch("googlemaps.timezone.datetime", MockDatetime())
     def test_los_angeles_with_no_timestamp(self):
         responses.add(responses.GET,
@@ -65,7 +68,7 @@ class TimezoneTest(_test.TestCase):
                       status=200,
                       content_type="application/json")
 
-        timezone = self.client.timezone((39.603481, -119.682251))
+        timezone = yield from self.client.timezone((39.603481, -119.682251))
         self.assertIsNotNone(timezone)
 
         self.assertEqual(1, len(responses.calls))

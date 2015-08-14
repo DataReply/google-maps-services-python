@@ -22,6 +22,7 @@ import googlemaps
 
 import responses
 import test as _test
+import pytest
 
 class RoadsTest(_test.TestCase):
 
@@ -30,6 +31,7 @@ class RoadsTest(_test.TestCase):
         self.client = googlemaps.Client(self.key)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_snap(self):
         responses.add(responses.GET,
                       "https://roads.googleapis.com/v1/snapToRoads",
@@ -37,7 +39,7 @@ class RoadsTest(_test.TestCase):
                       status=200,
                       content_type="application/json")
 
-        results = self.client.snap_to_roads((40.714728, -73.998672))
+        results = yield from self.client.snap_to_roads((40.714728, -73.998672))
         self.assertEqual("foo", results[0])
 
         self.assertEqual(1, len(responses.calls))
@@ -46,6 +48,7 @@ class RoadsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_path(self):
         responses.add(responses.GET,
                       "https://roads.googleapis.com/v1/speedLimits",
@@ -53,7 +56,7 @@ class RoadsTest(_test.TestCase):
                       status=200,
                       content_type="application/json")
 
-        results = self.client.snapped_speed_limits([(1, 2),(3, 4)])
+        results = yield from self.client.snapped_speed_limits([(1, 2),(3, 4)])
         self.assertEqual("foo", results["speedLimits"][0])
 
         self.assertEqual(1, len(responses.calls))
@@ -63,6 +66,7 @@ class RoadsTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_speedlimits(self):
         responses.add(responses.GET,
                       "https://roads.googleapis.com/v1/speedLimits",
@@ -70,13 +74,14 @@ class RoadsTest(_test.TestCase):
                       status=200,
                       content_type="application/json")
 
-        results = self.client.speed_limits("id1")
+        results = yield from self.client.speed_limits("id1")
         self.assertEqual("foo", results[0])
         self.assertEqual("https://roads.googleapis.com/v1/speedLimits?"
                          "placeId=id1&key=%s" % self.key,
                          responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_speedlimits_multiple(self):
         responses.add(responses.GET,
                       "https://roads.googleapis.com/v1/speedLimits",
@@ -84,7 +89,7 @@ class RoadsTest(_test.TestCase):
                       status=200,
                       content_type="application/json")
 
-        results = self.client.speed_limits(["id1", "id2", "id3"])
+        results = yield from self.client.speed_limits(["id1", "id2", "id3"])
         self.assertEqual("foo", results[0])
         self.assertEqual("https://roads.googleapis.com/v1/speedLimits?"
                          "placeId=id1&placeId=id2&placeId=id3"
@@ -95,9 +100,10 @@ class RoadsTest(_test.TestCase):
         client = googlemaps.Client(client_id="asdf", client_secret="asdf")
 
         with self.assertRaises(ValueError):
-            client.speed_limits("foo")
+            yield from client.speed_limits("foo")
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_retry(self):
         class request_callback:
             def __init__(self):
@@ -114,7 +120,7 @@ class RoadsTest(_test.TestCase):
                 content_type="application/json",
                 callback=request_callback())
 
-        self.client.speed_limits([])
+        yield from self.client.speed_limits([])
 
         self.assertEqual(2, len(responses.calls))
         self.assertEqual(responses.calls[0].request.url, responses.calls[1].request.url)

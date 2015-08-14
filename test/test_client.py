@@ -19,6 +19,7 @@
 """Tests for client module."""
 
 import responses
+import pytest
 
 import googlemaps
 from googlemaps import client as _client
@@ -42,6 +43,7 @@ class ClientTest(_test.TestCase):
         self.assertEqual("address=%3DSydney+~", encoded_params)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_key_sent(self):
         responses.add(responses.GET,
                       "https://maps.googleapis.com/maps/api/geocode/json",
@@ -50,7 +52,7 @@ class ClientTest(_test.TestCase):
                       content_type="application/json")
 
         client = googlemaps.Client(key="AIzaasdf")
-        client.geocode("Sesame St.")
+        yield from client.geocode("Sesame St.")
 
         self.assertEqual(1, len(responses.calls))
         self.assertURLEqual("https://maps.googleapis.com/maps/api/geocode/json?"
@@ -72,6 +74,7 @@ class ClientTest(_test.TestCase):
         self.assertEqual(signature, _client.sign_hmac(key, message))
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_url_signed(self):
         responses.add(responses.GET,
                       "https://maps.googleapis.com/maps/api/geocode/json",
@@ -80,7 +83,7 @@ class ClientTest(_test.TestCase):
                       content_type="application/json")
 
         client = googlemaps.Client(client_id="foo", client_secret="a2V5")
-        client.geocode("Sesame St.")
+        yield from client.geocode("Sesame St.")
 
         self.assertEqual(1, len(responses.calls))
 
@@ -93,6 +96,7 @@ class ClientTest(_test.TestCase):
                             responses.calls[0].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_ua_sent(self):
         responses.add(responses.GET,
                       "https://maps.googleapis.com/maps/api/geocode/json",
@@ -101,13 +105,14 @@ class ClientTest(_test.TestCase):
                       content_type="application/json")
 
         client = googlemaps.Client(key="AIzaasdf")
-        client.geocode("Sesame St.")
+        yield from client.geocode("Sesame St.")
 
         self.assertEqual(1, len(responses.calls))
         user_agent = responses.calls[0].request.headers["User-Agent"]
         self.assertTrue(user_agent.startswith("GoogleGeoApiClientPython"))
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_retry(self):
         class request_callback:
             def __init__(self):
@@ -125,12 +130,13 @@ class ClientTest(_test.TestCase):
                 callback=request_callback())
 
         client = googlemaps.Client(key="AIzaasdf")
-        client.geocode("Sesame St.")
+        yield from client.geocode("Sesame St.")
 
         self.assertEqual(2, len(responses.calls))
         self.assertEqual(responses.calls[0].request.url, responses.calls[1].request.url)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_transport_error(self):
         responses.add(responses.GET,
                       "https://maps.googleapis.com/maps/api/geocode/json",
@@ -139,11 +145,12 @@ class ClientTest(_test.TestCase):
 
         client = googlemaps.Client(key="AIzaasdf")
         with self.assertRaises(googlemaps.exceptions.HTTPError) as e:
-            client.geocode("Foo")
+            yield from client.geocode("Foo")
 
         self.assertEqual(e.exception.status_code, 404)
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_host_override(self):
         responses.add(responses.GET,
                       "https://foo.com/bar",
@@ -152,11 +159,12 @@ class ClientTest(_test.TestCase):
                       content_type="application/json")
 
         client = googlemaps.Client(key="AIzaasdf")
-        client._get("/bar", {}, base_url="https://foo.com")
+        yield from client._get("/bar", {}, base_url="https://foo.com")
 
         self.assertEqual(1, len(responses.calls))
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_custom_extract(self):
         def custom_extract(resp):
             return resp.json()
@@ -168,11 +176,12 @@ class ClientTest(_test.TestCase):
                       content_type="application/json")
 
         client = googlemaps.Client(key="AIzaasdf")
-        b = client._get("/bar", {}, extract_body=custom_extract)
+        b = yield from client._get("/bar", {}, extract_body=custom_extract)
         self.assertEqual(1, len(responses.calls))
         self.assertEqual("errormessage", b["error"])
 
     @responses.activate
+    @pytest.mark.asyncio
     def test_retry_intermittent(self):
         class request_callback:
             def __init__(self):
@@ -190,6 +199,6 @@ class ClientTest(_test.TestCase):
                 callback=request_callback())
 
         client = googlemaps.Client(key="AIzaasdf")
-        client.geocode("Sesame St.")
+        yield from client.geocode("Sesame St.")
 
         self.assertEqual(2, len(responses.calls))
